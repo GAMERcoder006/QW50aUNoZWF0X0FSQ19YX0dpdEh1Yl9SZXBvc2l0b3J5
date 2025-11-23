@@ -1,19 +1,14 @@
-# Project Name
+# AntiCheat
 
 ## Overview
-Brief explanation of what this project does.
+Description
 
 ## Features
-- Feature 1
-- Feature 2
-- Feature 3
 
 ## Installation
-Steps to install or integrate the tool.
 
 ## Usage
-How to use the module, with code examples.
 
 ## License
-© 2025 <YourNameOrPseudo>
+© 2025 DRAGONLEGEND_006
 All rights reserved.
