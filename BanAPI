@@ -1,0 +1,29 @@
+local DataStoreService = game:GetService("DataStoreService")
+
+local BannedPlayers = DataStoreService:GetDataStore("BannedPlayers")
+
+local BanArchive = require(game.ServerStorage.Arcx.API.AdminServices.BanAPI.ArchiveBan)
+
+game.Players.PlayerAdded:Connect(function(player)
+	local success, data = pcall(function()
+		return BannedPlayers:GetAsync(player.UserId)
+	end)
+	
+	if success and data then
+		local currentTime = os.time()
+		if data.expireAt == -1 or data.expireAt > currentTime then -- Ban Active
+			print("Player " .. player.UserId .. " is currently banned. Proceed to BanHub.")
+			-- Teleport to ban hub
+		elseif data.expireAt == 0 then -- Ban Inactive
+			print("Player " .. player.UserId .. " is currently unbanned.")
+		else -- Ban Expired
+			print("Player's ban is expired. Proceed to archiving.")
+			local newData = BanArchive.ArchiveBan(data)
+			BannedPlayers:SetAsync(player.UserId, newData)
+			player:Kick("We have archived your ban data. Please reconnect.")
+		end
+	else
+		print("Player " .. player.UserId .. " is currently unbanned.")
+	end
+	
+end)
