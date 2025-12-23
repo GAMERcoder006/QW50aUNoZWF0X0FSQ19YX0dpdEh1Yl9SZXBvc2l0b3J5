@@ -1,0 +1,28 @@
+local BanArchive = {}
+BanArchive.__index = BanArchive
+
+function BanArchive.ArchiveBan(banData)
+	local datestamp = os.date("%Y-%m-%d_%H-%M-%S", os.time())
+	
+	banData.banHistory = banData.banHistory or {}
+
+	banData.banHistory[datestamp] = {
+		reason = banData.reason or {},
+		message = banData.message or "Banned",
+		bannedAt = banData.bannedAt or {localTime = os.time(), serverTime = os.time()},
+		expireAt = banData.expireAt or -1,
+		duration = banData.duration or "",
+		by = banData.by or {by = "System", approvedBy = "System", anonym = false}
+	}
+
+	banData.reason = {}
+	banData.message = ""
+	banData.bannedAt = {}
+	banData.expireAt = 0
+	banData.duration = ""
+	banData.by = {}
+
+	return banData
+end
+
+return BanArchive
