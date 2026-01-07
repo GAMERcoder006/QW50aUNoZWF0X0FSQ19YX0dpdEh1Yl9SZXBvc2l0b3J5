@@ -1,9 +1,9 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
-local CHECK_INTERVAL = 1
-local SAFE_MARGIN = 3
-local MAX_STRIKES = 1
+local CHECK_INTERVAL = game.ServerStorage.Arcx.Configuration.AntiSpeed.CheckInterval.Value
+local SAFE_MARGIN = game.ServerStorage.Arcx.Configuration.AntiSpeed.SafeMargin.Value
+local MAX_FLAGS = game.ServerStorage.Arcx.Configuration.AntiSpeed.Flags.Value
 
 local playerData = {}
 
@@ -71,7 +71,7 @@ task.spawn(function()
 			if horizontalDistance > maxDistance then
 				data.strikes += 1
 
-				if data.strikes >= MAX_STRIKES then
+				if data.strikes >= MAX_FLAGS then
 					player:Kick("Unauthorized speed modifier detected. Please reconnect. | ARC-X")
 					playerData[player] = nil
 					continue
