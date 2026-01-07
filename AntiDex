@@ -1,1 +1,8 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local DexDetected = ReplicatedStorage.Shared.Arcx.Services.AntiDex.DexDetected
+
+DexDetected.OnServerEvent:Connect(function(player)
+	player:Kick("Detected usage of Dex explorer on your client.")
+end)
