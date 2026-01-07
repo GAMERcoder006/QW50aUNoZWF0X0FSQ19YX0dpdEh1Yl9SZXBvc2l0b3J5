@@ -1,43 +1,87 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
-local module = {}
-local MaxSpeed = 32
-local PlayerData = {}
+local CHECK_INTERVAL = 1
+local SAFE_MARGIN = 3
+local MAX_STRIKES = 1
 
-local function TrackPlayer(plr)
-	PlayerData[plr] = {LastPos = nil}
+local playerData = {}
+
+local function getHorizontalDistance(a, b)
+	return Vector3.new(a.X, 0, a.Z).Magnitude - Vector3.new(b.X, 0, b.Z).Magnitude
 end
 
-local function UntrackPlayer(plr)
-	PlayerData[plr] = nil
-end
+local function onCharacterAdded(player, character)
+	local hrp = character:WaitForChild("HumanoidRootPart", 5)
+	local humanoid = character:WaitForChild("Humanoid", 5)
 
-Players.PlayerAdded:Connect(TrackPlayer)
-Players.PlayerRemoving:Connect(UntrackPlayer)
-
-RunService.Heartbeat:Connect(function(dt)
-	for plr, data in pairs(PlayerData) do
-		local char = plr.Character
-		if not char then continue end
-		local hrp = char:FindFirstChild("HumanoidRootPart")
-		if not hrp then continue end
-
-		local pos = hrp.Position
-		if not data.LastPos then
-			data.LastPos = pos
-			continue
-		end
-
-		local dist = (pos - data.LastPos).Magnitude
-		local speed = dist / dt
-
-		if speed > MaxSpeed then
-			plr:Kick("Speed Exploit Detected")
-		end
-
-		data.LastPos = pos
+	if not hrp or not humanoid then
+		return
 	end
+
+	playerData[player] = {
+		lastPosition = hrp.Position,
+		lastTime = os.clock(),
+		strikes = 0
+	}
+end
+
+Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function(character)
+		task.wait(1)
+		onCharacterAdded(player, character)
+	end)
 end)
 
-return module
+Players.PlayerRemoving:Connect(function(player)
+	playerData[player] = nil
+end)
+
+task.spawn(function()
+	while true do
+		task.wait(CHECK_INTERVAL)
+
+		for _, player in ipairs(Players:GetPlayers()) do
+			local data = playerData[player]
+			local character = player.Character
+
+			if not data or not character then
+				continue
+			end
+
+			local hrp = character:FindFirstChild("HumanoidRootPart")
+			local humanoid = character:FindFirstChild("Humanoid")
+
+			if not hrp or not humanoid then
+				continue
+			end
+
+			local now = os.clock()
+			local deltaTime = now - data.lastTime
+			if deltaTime <= 0 then
+				continue
+			end
+
+			local delta = hrp.Position - data.lastPosition
+			local horizontalDistance = Vector3.new(delta.X, 0, delta.Z).Magnitude
+
+			local allowedSpeed = humanoid.WalkSpeed
+			local maxDistance = (allowedSpeed * deltaTime) + SAFE_MARGIN
+
+			if horizontalDistance > maxDistance then
+				data.strikes += 1
+
+				if data.strikes >= MAX_STRIKES then
+					player:Kick("Unauthorized speed modifier detected. Please reconnect. | ARC-X")
+					playerData[player] = nil
+					continue
+				end
+			else
+				data.strikes = math.max(0, data.strikes - 1)
+			end
+
+			data.lastPosition = hrp.Position
+			data.lastTime = now
+		end
+	end
+end)
